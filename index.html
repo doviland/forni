@@ -46,44 +46,6 @@
             font-size: 1.1em;
         }
         
-        .status-bar {
-            background: #34495e;
-            color: white;
-            padding: 10px 30px;
-            font-size: 0.9em;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #27ae60;
-            animation: pulse 2s infinite;
-        }
-        
-        .status-dot.loading {
-            background: #f39c12;
-        }
-        
-        .status-dot.error {
-            background: #e74c3c;
-        }
-        
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-        
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -176,15 +138,7 @@
             font-weight: bold;
         }
         
-        .controls {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin: 20px 0;
-            flex-wrap: wrap;
-        }
-        
-        .btn {
+        .refresh-btn {
             background: #3498db;
             color: white;
             border: none;
@@ -192,23 +146,13 @@
             border-radius: 25px;
             cursor: pointer;
             font-size: 1em;
+            margin: 20px auto;
+            display: block;
             transition: background 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
         
-        .btn:hover {
+        .refresh-btn:hover {
             background: #2980b9;
-        }
-        
-        .btn:disabled {
-            background: #95a5a6;
-            cursor: not-allowed;
-        }
-        
-        .btn.auto-refresh.active {
-            background: #27ae60;
         }
         
         .footer {
@@ -217,34 +161,6 @@
             padding: 20px;
             text-align: center;
             font-size: 0.9em;
-        }
-        
-        .config-section {
-            background: #ecf0f1;
-            padding: 20px;
-            margin: 20px;
-            border-radius: 10px;
-            border-left: 4px solid #3498db;
-        }
-        
-        .config-section h3 {
-            margin-bottom: 15px;
-            color: #2c3e50;
-        }
-        
-        .config-section p {
-            margin-bottom: 10px;
-            color: #34495e;
-            line-height: 1.6;
-        }
-        
-        .config-section code {
-            background: #34495e;
-            color: white;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
-            word-break: break-all;
         }
         
         @media (max-width: 768px) {
@@ -259,16 +175,6 @@
             .chart-container {
                 height: 300px;
             }
-            
-            .status-bar {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .controls {
-                flex-direction: column;
-                align-items: center;
-            }
         }
     </style>
 </head>
@@ -276,17 +182,7 @@
     <div class="container">
         <div class="header">
             <h1>🏔️ Appartamento Forni di Sopra</h1>
-            <p>Dashboard Gestione Affitti - Collegata a Google Sheets</p>
-        </div>
-        
-        <div class="status-bar">
-            <div class="status-indicator">
-                <div class="status-dot" id="statusDot"></div>
-                <span id="statusText">Connesso</span>
-            </div>
-            <div>
-                Ultimo aggiornamento: <span id="lastUpdate">Mai</span>
-            </div>
+            <p>Dashboard Gestione Affitti - Aggiornamento da Google Sheets</p>
         </div>
         
         <div class="stats-grid">
@@ -309,18 +205,6 @@
         </div>
         
         <div class="content">
-            <div class="controls">
-                <button class="btn" onclick="loadData()">
-                    🔄 Aggiorna Ora
-                </button>
-                <button class="btn auto-refresh" id="autoRefreshBtn" onclick="toggleAutoRefresh()">
-                    ⏰ Auto-Refresh: OFF
-                </button>
-                <button class="btn" onclick="exportCSV()">
-                    📥 Esporta CSV
-                </button>
-            </div>
-            
             <div class="chart-container">
                 <canvas id="trendChart"></canvas>
             </div>
@@ -338,39 +222,22 @@
                 <tbody id="tableBody">
                 </tbody>
             </table>
-        </div>
-        
-        <div class="config-section">
-            <h3>🔧 Configurazione Google Sheets</h3>
-            <p><strong>1. Configura il tuo Google Sheet:</strong></p>
-            <p>• Intestazioni nella riga 1: <code>Mese | Incassi | Spese | Note | Data</code></p>
-            <p>• Dati a partire dalla riga 2</p>
-            <p>• Rendi il foglio <strong>pubblico</strong> (Condividi → Chiunque abbia il link può visualizzare)</p>
             
-            <p><strong>2. Incolla il link completo del tuo Google Sheet:</strong></p>
-            <p>• Esempio: <code>https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit#gid=0</code></p>
-            
-            <p><strong>3. Sostituisci il link nel codice:</strong></p>
-            <p>• Modifica la riga con <code>SHEET_URL</code> inserendo il tuo link completo</p>
+            <button class="refresh-btn" onclick="loadData()">🔄 Aggiorna Dati</button>
         </div>
         
         <div class="footer">
-            <p>Dashboard Auto-Aggiornabile - Forni di Sopra Apartment Management</p>
+            <p>Dashboard collegata a Google Sheets - Ultimo aggiornamento: <span id="lastUpdate"></span></p>
         </div>
     </div>
 
     <script>
-        // 🔗 CONFIGURAZIONE GOOGLE SHEETS - USA IL LINK COMPLETO
-        // 🚨 SOSTITUISCI QUESTO LINK CON IL LINK COMPLETO DEL TUO GOOGLE SHEET
-        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit#gid=0';
+        // CONFIGURAZIONE GOOGLE SHEETS - IL TUO LINK SPECIFICO
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1ofeCsPifEilmeelyFs1M2j2j7McRVgmG89OCefFe1pw/edit?gid=1220788526#gid=1220788526';
         
-        // VARIABILI GLOBALI
         let chart;
-        let autoRefreshInterval;
-        let isAutoRefreshActive = false;
-        let lastDataHash = '';
         
-        // DATI DI FALLBACK (se Google Sheets non è disponibile)
+        // DATI DI FALLBACK (dalla tua tabella attuale)
         let data = [
             ['Dicembre', 422, 150, 272, 272],
             ['Gennaio', 524, 180, 344, 616],
@@ -390,35 +257,28 @@
             return match ? match[1] : null;
         }
         
-        // FUNZIONE PER AGGIORNARE STATUS
-        function updateStatus(status, message) {
-            const statusDot = document.getElementById('statusDot');
-            const statusText = document.getElementById('statusText');
-            
-            statusDot.className = `status-dot ${status}`;
-            statusText.textContent = message;
+        // FUNZIONE PER ESTRARRE GID DAL LINK
+        function extractGid(url) {
+            const gidMatch = url.match(/gid=(\d+)/);
+            return gidMatch ? gidMatch[1] : '0';
         }
         
         // FUNZIONE PER CARICARE DATI DA GOOGLE SHEETS
         async function loadFromGoogleSheets() {
-            updateStatus('loading', 'Caricamento...');
-            
             try {
-                // Estrai l'ID dal link completo
                 const sheetId = extractSheetId(SHEET_URL);
+                const gid = extractGid(SHEET_URL);
                 
                 if (!sheetId) {
                     throw new Error('Link Google Sheets non valido');
                 }
                 
-                // URL per leggere Google Sheets pubblico
-                const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=Sheet1`;
+                // URL per leggere il foglio specifico (usando il GID)
+                const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}`;
                 
                 console.log('🔗 Caricamento da:', url);
                 
-                // Aggiungi cache-busting per forzare l'aggiornamento
-                const cacheBuster = new Date().getTime();
-                const response = await fetch(`${url}&cb=${cacheBuster}`);
+                const response = await fetch(url);
                 
                 if (!response.ok) {
                     throw new Error(`Errore HTTP: ${response.status}`);
@@ -434,7 +294,6 @@
                 for (let i = 1; i < lines.length; i++) {
                     const line = lines[i].trim();
                     if (line) {
-                        // Parse CSV considerando le virgolette
                         const columns = parseCSVLine(line);
                         if (columns.length >= 3 && columns[0] && columns[1] && columns[2]) {
                             const mese = columns[0].replace(/"/g, '').trim();
@@ -442,7 +301,7 @@
                             const spese = parseFloat(columns[2].replace(/"/g, '').replace(/[^\d.-]/g, '')) || 0;
                             const saldoMensile = incassi - spese;
                             
-                            if (mese && (incassi > 0 || spese > 0)) { // Solo righe con dati validi
+                            if (mese && (incassi > 0 || spese > 0)) {
                                 newData.push([mese, incassi, spese, saldoMensile, 0]);
                             }
                         }
@@ -457,37 +316,13 @@
                         row[4] = progressivo;
                     });
                     
-                    // Controlla se i dati sono cambiati
-                    const newDataHash = JSON.stringify(newData);
-                    if (newDataHash !== lastDataHash) {
-                        data = newData;
-                        lastDataHash = newDataHash;
-                        updateStatus('', 'Aggiornato ✅');
-                        console.log('✅ Dati aggiornati da Google Sheets:', data);
-                        return true; // Dati cambiati
-                    } else {
-                        updateStatus('', 'Nessun cambiamento');
-                        console.log('ℹ️ Nessun cambiamento nei dati');
-                        return false; // Nessun cambiamento
-                    }
-                } else {
-                    throw new Error('Nessun dato valido trovato nel foglio');
+                    data = newData;
+                    console.log('✅ Dati caricati da Google Sheets:', data);
                 }
                 
             } catch (error) {
                 console.warn('⚠️ Errore caricamento Google Sheets:', error);
-                updateStatus('error', 'Errore connessione');
-                
-                // Mostra un messaggio più dettagliato all'utente
-                if (error.message.includes('non valido')) {
-                    updateStatus('error', 'Link non valido');
-                } else if (error.message.includes('HTTP')) {
-                    updateStatus('error', 'Foglio non pubblico');
-                } else {
-                    updateStatus('error', 'Errore - Dati locali');
-                }
-                
-                return false;
+                console.log('📊 Utilizzo dati di fallback');
             }
         }
         
@@ -514,8 +349,6 @@
         
         // FUNZIONE PER AGGIORNARE STATISTICHE
         function updateStats() {
-            if (data.length === 0) return;
-            
             const incassi = data.map(row => row[1]);
             const spese = data.map(row => row[2]);
             
@@ -538,7 +371,7 @@
             data.forEach(row => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><strong>${row[0]}</strong></td>
+                    <td>${row[0]}</td>
                     <td class="incassi">€${row[1].toLocaleString()}</td>
                     <td class="spese">€${row[2].toLocaleString()}</td>
                     <td class="${row[3] >= 0 ? 'positive' : 'negative'}">€${row[3].toLocaleString()}</td>
@@ -568,11 +401,7 @@
                             backgroundColor: 'rgba(39, 174, 96, 0.1)',
                             borderWidth: 3,
                             fill: false,
-                            tension: 0.4,
-                            pointBackgroundColor: '#27ae60',
-                            pointBorderColor: '#fff',
-                            pointBorderWidth: 2,
-                            pointRadius: 6
+                            tension: 0.4
                         },
                         {
                             label: 'Spese',
@@ -581,11 +410,7 @@
                             backgroundColor: 'rgba(231, 76, 60, 0.1)',
                             borderWidth: 3,
                             fill: false,
-                            tension: 0.4,
-                            pointBackgroundColor: '#e74c3c',
-                            pointBorderColor: '#fff',
-                            pointBorderWidth: 2,
-                            pointRadius: 6
+                            tension: 0.4
                         },
                         {
                             label: 'Saldo Mensile',
@@ -594,11 +419,7 @@
                             backgroundColor: 'rgba(52, 152, 219, 0.1)',
                             borderWidth: 3,
                             fill: false,
-                            tension: 0.4,
-                            pointBackgroundColor: '#3498db',
-                            pointBorderColor: '#fff',
-                            pointBorderWidth: 2,
-                            pointRadius: 6
+                            tension: 0.4
                         }
                     ]
                 },
@@ -611,7 +432,7 @@
                         },
                         title: {
                             display: true,
-                            text: 'Andamento Mensile Appartamento Forni di Sopra'
+                            text: 'Andamento Incassi vs Spese'
                         }
                     },
                     scales: {
@@ -623,79 +444,23 @@
                                 }
                             }
                         }
-                    },
-                    interaction: {
-                        intersect: false,
-                        mode: 'index'
                     }
                 }
             });
         }
         
-        // FUNZIONE PER ATTIVARE/DISATTIVARE AUTO-REFRESH
-        function toggleAutoRefresh() {
-            const btn = document.getElementById('autoRefreshBtn');
-            
-            if (isAutoRefreshActive) {
-                // Disattiva auto-refresh
-                clearInterval(autoRefreshInterval);
-                isAutoRefreshActive = false;
-                btn.textContent = '⏰ Auto-Refresh: OFF';
-                btn.classList.remove('active');
-            } else {
-                // Attiva auto-refresh (ogni 30 secondi)
-                autoRefreshInterval = setInterval(loadData, 30000);
-                isAutoRefreshActive = true;
-                btn.textContent = '⏰ Auto-Refresh: ON';
-                btn.classList.add('active');
-            }
-        }
-        
-        // FUNZIONE PER ESPORTARE CSV
-        function exportCSV() {
-            const csvContent = "data:text/csv;charset=utf-8," 
-                + "Mese,Incassi,Spese,Saldo Mensile,Saldo Progressivo\n"
-                + data.map(row => row.join(',')).join('\n');
-            
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "appartamento_forni_sopra_" + new Date().toISOString().slice(0,10) + ".csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-        
         // FUNZIONE PRINCIPALE PER CARICARE DATI
         async function loadData() {
-            const dataChanged = await loadFromGoogleSheets();
-            
-            // Aggiorna sempre l'interfaccia se i dati sono cambiati
-            // o se è il primo caricamento
-            if (dataChanged || document.getElementById('lastUpdate').textContent === 'Mai') {
-                updateStats();
-                updateTable();
-                createChart();
-            }
-            
-            document.getElementById('lastUpdate').textContent = new Date().toLocaleString('it-IT');
+            await loadFromGoogleSheets();
+            updateStats();
+            updateTable();
+            createChart();
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleString();
         }
         
         // CARICAMENTO INIZIALE
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Dashboard inizializzata');
-            console.log('🔗 URL Google Sheet configurato:', SHEET_URL);
             loadData();
-            
-            // Carica i dati ogni volta che la finestra torna in focus
-            window.addEventListener('focus', loadData);
-        });
-        
-        // Auto-refresh quando la pagina torna visibile
-        document.addEventListener('visibilitychange', function() {
-            if (!document.hidden && isAutoRefreshActive) {
-                loadData();
-            }
         });
     </script>
 </body>
