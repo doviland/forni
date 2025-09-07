@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Appartamento Forni di Sopra</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-value {
+            font-size: 2.2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .incassi { color: #27ae60; }
+        .spese { color: #e74c3c; }
+        .saldo { color: #3498db; }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 30px 0;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .data-table th {
+            background: #34495e;
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            letter-spacing: 1px;
+        }
+        
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .data-table .positive {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .data-table .negative {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .refresh-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 20px auto;
+            display: block;
+            transition: background 0.3s ease;
+        }
+        
+        .refresh-btn:hover {
+            background: #2980b9;
+        }
+        
+        .footer {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 0.9em;
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .chart-container {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏔️ Appartamento Forni di Sopra</h1>
+            <p>Dashboard Gestione Affitti - Aggiornamento Automatico da Google Sheets</p>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value incassi" id="totalIncassi">€0</div>
+                <div class="stat-label">Incassi Totali</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value spese" id="totalSpese">€0</div>
+                <div class="stat-label">Spese Totali</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value saldo" id="saldoTotale">€0</div>
+                <div class="stat-label">Saldo Totale</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="mediaIncassi">€0</div>
+                <div class="stat-label">Media Mensile</div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="chart-container">
+                <canvas id="trendChart"></canvas>
+            </div>
+            
+            <table class="data-table" id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Mese</th>
+                        <th>Incassi (€)</th>
+                        <th>Spese (€)</th>
+                        <th>Saldo Mensile (€)</th>
+                        <th>Saldo Progressivo (€)</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+            </table>
+            
+            <button class="refresh-btn" onclick="loadData()">🔄 Aggiorna Dati</button>
+        </div>
+        
+        <div class="footer">
+            <p>Dashboard collegata a Google Sheets - Ultimo aggiornamento: <span id="lastUpdate"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURAZIONE GOOGLE SHEETS
+        const SHEET_ID = '1mK8vY6tHJPxE_zN5p8FcXgL3dR9mA2bV7sQ1wE4uI6oT'; // ID DEL TUO GOOGLE SHEET
+        const API_KEY = 'AIzaSyBpZJQKqXrF3vL7mN8wE2rT9sY4uI1oP6bC8dA'; // LA TUA API KEY
+        const RANGE = 'Sheet1!A2:E50'; // RANGE DEI DATI (dalla riga 2 in poi)
+        
+        let chart;
+        let data = [
+            ['Dicembre', 422, 150, 272, 272],
+            ['Gennaio', 524, 180, 344, 616],
+            ['Febbraio', 1175, 220, 955, 1571],
+            ['Marzo', 200, 160, 40, 1611],
+            ['Aprile', 329, 140, 189, 1800],
+            ['Maggio', 86, 120, -34, 1766],
+            ['Giugno', 317, 200, 117, 1883],
+            ['Luglio', 1686, 300, 1386, 3269],
+            ['Agosto', 2150, 250, 1900, 5169]
+        ];
+        
+        // FUNZIONE PER CARICARE DATI DA GOOGLE SHEETS
+        async function loadFromGoogleSheets() {
+            try {
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGE}?key=${API_KEY}`;
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (result.values && result.values.length > 0) {
+                    data = result.values.map(row => [
+                        row[0], // Mese
+                        parseFloat(row[1]) || 0, // Incassi
+                        parseFloat(row[2]) || 0, // Spese
+                        parseFloat(row[1] || 0) - parseFloat(row[2] || 0), // Saldo Mensile
+                        0 // Saldo Progressivo (calcolato dopo)
+                    ]);
+                    
+                    // Calcola saldi progressivi
+                    let progressivo = 0;
+                    data.forEach(row => {
+                        progressivo += row[3];
+                        row[4] = progressivo;
+                    });
+                    
+                    console.log('Dati caricati da Google Sheets:', data);
+                }
+            } catch (error) {
+                console.log('Errore caricamento Google Sheets:', error);
+                console.log('Utilizzo dati di fallback');
+            }
+        }
+        
+        // FUNZIONE PER AGGIORNARE STATISTICHE
+        function updateStats() {
+            const incassi = data.map(row => row[1]);
+            const spese = data.map(row => row[2]);
+            const saldi = data.map(row => row[3]);
+            
+            const totalIncassi = incassi.reduce((a, b) => a + b, 0);
+            const totalSpese = spese.reduce((a, b) => a + b, 0);
+            const saldoTotale = totalIncassi - totalSpese;
+            const mediaIncassi = totalIncassi / incassi.length;
+            
+            document.getElementById('totalIncassi').textContent = `€${totalIncassi.toLocaleString()}`;
+            document.getElementById('totalSpese').textContent = `€${totalSpese.toLocaleString()}`;
+            document.getElementById('saldoTotale').textContent = `€${saldoTotale.toLocaleString()}`;
+            document.getElementById('mediaIncassi').textContent = `€${Math.round(mediaIncassi).toLocaleString()}`;
+        }
+        
+        // FUNZIONE PER AGGIORNARE TABELLA
+        function updateTable() {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+            
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row[0]}</td>
+                    <td class="incassi">€${row[1].toLocaleString()}</td>
+                    <td class="spese">€${row[2].toLocaleString()}</td>
+                    <td class="${row[3] >= 0 ? 'positive' : 'negative'}">€${row[3].toLocaleString()}</td>
+                    <td class="saldo">€${row[4].toLocaleString()}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+        
+        // FUNZIONE PER CREARE GRAFICO
+        function createChart() {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            
+            if (chart) {
+                chart.destroy();
+            }
+            
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(row => row[0]),
+                    datasets: [
+                        {
+                            label: 'Incassi',
+                            data: data.map(row => row[1]),
+                            borderColor: '#27ae60',
+                            backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                            borderWidth: 3,
+                            fill: false,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Spese',
+                            data: data.map(row => row[2]),
+                            borderColor: '#e74c3c',
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            borderWidth: 3,
+                            fill: false,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Saldo Mensile',
+                            data: data.map(row => row[3]),
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            borderWidth: 3,
+                            fill: false,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Andamento Incassi vs Spese'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '€' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // FUNZIONE PRINCIPALE PER CARICARE DATI
+        async function loadData() {
+            await loadFromGoogleSheets();
+            updateStats();
+            updateTable();
+            createChart();
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleString();
+        }
+        
+        // CARICAMENTO INIZIALE
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+        });
+    </script>
+</body>
+</html>
