@@ -253,7 +253,7 @@
         // FUNZIONE PER CARICARE DATI DA GOOGLE SHEETS
         async function loadFromGoogleSheets() {
             try {
-                const url = `https://sheets.googleapis.com/v4/spreadsheets/${1ofeCsPifEilmeelyFs1M2j2j7McRVgmG89OCefFe1pw}/values/${RANGE}?key=${API_KEY}`;
+                const url = `https://docs.google.com/spreadsheets/d/1ofeCsPifEilmeelyFs1M2j2j7McRVgmG89OCefFe1pw/edit?gid=1220788526#gid=1220788526`;
                 const response = await fetch(url);
                 const result = await response.json();
                 
